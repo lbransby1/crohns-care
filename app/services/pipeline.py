@@ -23,6 +23,8 @@ def resolve_logs(preset_id: str | None, logs: list[str] | None, text: str | None
         preset = get_preset(preset_id)
         if not preset:
             raise ValueError(f"Unknown preset: {preset_id}")
+        if preset.get("raw"):
+            return parse_log_document(preset["raw"]), preset["title"]
         return preset["logs"], preset["title"]
     if logs:
         cleaned = parse_log_document("\n".join(logs))

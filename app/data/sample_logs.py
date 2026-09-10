@@ -87,6 +87,123 @@ PRESETS = [
             "Not terrible, not well. One Bristol 6 stool and one formed. Residual fatigue. Evening dose taken on time.",
         ],
     },
+    {
+        "id": "gappy-12",
+        "title": "Skipped empty days",
+        "patient": "Synthetic case E",
+        "days": 4,
+        "teaser": "Only writes on bad days. Blank lines, comments, and Day 1 / 5 / 9 / 12 gaps.",
+        "pattern": "Stress test",
+        "raw": """# I only bother writing when something is wrong. Quiet days are blank on purpose.
+
+Day 1: Felt fine. One formed stool. Took azathioprine.
+
+
+Day 5: Back after three silent days. Mild cramps, two loose stools. Pretty sure I missed the evening pill on day 3.
+
+Day 9: Did not log 6–8. Weekend was watery like four times, knee puffed up, mouth ulcer. Still skipping the diary when I feel ok.
+
+Day 12: Still rough. Three liquid stools. Forgot the morning dose. Days 10 and 11 were similar so I left them empty.
+""",
+        "logs": [
+            "Felt fine. One formed stool. Took azathioprine.",
+            "Back after three silent days. Mild cramps, two loose stools. Pretty sure I missed the evening pill on day 3.",
+            "Did not log 6–8. Weekend was watery like four times, knee puffed up, mouth ulcer. Still skipping the diary when I feel ok.",
+            "Still rough. Three liquid stools. Forgot the morning dose. Days 10 and 11 were similar so I left them empty.",
+        ],
+    },
+    {
+        "id": "informal-14",
+        "title": "Very informal texts",
+        "patient": "Synthetic case F",
+        "days": 14,
+        "teaser": "WhatsApp energy: slang, typos, no punctuation, mixed day labels.",
+        "pattern": "Stress test",
+        "raw": """yo day1 basically fine just a normal poop chicken n rice
+day2 nah pain nbd went gym solid bm
+day 3 bit meh took my aza whatever
+DAY4 spicy thai curry lol hope thats ok 1 solid
+d5 bloated after dinner bristol 4ish
+day6 woke up crampy mushy x2 skipped the nite pill oops
+7 still crampy 2 watery stools knackered tbh
+day eight knee is KILLING me rn stool loose 3 times so tired
+got a mouth sore like a canker?? 3 watery + lower right hurtin
+idk struggling 4 liquid knee swollen like a balloon
+3pm cramps were brutal 4 watery no energy
+terrible day 5 diarrhea episodes i was dying
+knee + ulcer still 4 loose stools took some painkillers
+same as yesterday basically 5 liquid felt awful all day didn't even shower""",
+        "logs": [
+            "yo day1 basically fine just a normal poop chicken n rice",
+            "day2 nah pain nbd went gym solid bm",
+            "day 3 bit meh took my aza whatever",
+            "DAY4 spicy thai curry lol hope thats ok 1 solid",
+            "d5 bloated after dinner bristol 4ish",
+            "day6 woke up crampy mushy x2 skipped the nite pill oops",
+            "7 still crampy 2 watery stools knackered tbh",
+            "day eight knee is KILLING me rn stool loose 3 times so tired",
+            "got a mouth sore like a canker?? 3 watery + lower right hurtin",
+            "idk struggling 4 liquid knee swollen like a balloon",
+            "3pm cramps were brutal 4 watery no energy",
+            "terrible day 5 diarrhea episodes i was dying",
+            "knee + ulcer still 4 loose stools took some painkillers",
+            "same as yesterday basically 5 liquid felt awful all day didn't even shower",
+        ],
+    },
+    {
+        "id": "terse-8",
+        "title": "One-word days",
+        "patient": "Synthetic case G",
+        "days": 8,
+        "teaser": "Almost nothing written. Tests extraction when the note is a fragment.",
+        "pattern": "Stress test",
+        "raw": """ok
+fine
+meh. aza
+curry. 1 stool
+cramps. skipped meds
+watery x2. tired
+knee. liquid x4. ulcer
+dying. 5 diarrhea""",
+        "logs": [
+            "ok",
+            "fine",
+            "meh. aza",
+            "curry. 1 stool",
+            "cramps. skipped meds",
+            "watery x2. tired",
+            "knee. liquid x4. ulcer",
+            "dying. 5 diarrhea",
+        ],
+    },
+    {
+        "id": "messy-header",
+        "title": "Notes, headers, out of order",
+        "patient": "Synthetic case H",
+        "days": 7,
+        "teaser": "A comment, WEEK ONE header, Day 4 before Day 2, and skipped empty rows.",
+        "pattern": "Stress test",
+        "raw": """# crohns log export
+WEEK ONE
+Day 4: watery x3 after the takeaway, forgot aza in the morning
+Day 1: all good formed stool took meds
+Day 2:
+
+Day 6: mouth ulcer + 4 liquid + knee ache took everything
+Day 3: same as usual i guess?? 1 solid
+nothing to report really so i left day 5 off
+Day 7: terrible 5 watery couldn't work
+""",
+        "logs": [
+            "WEEK ONE",
+            "watery x3 after the takeaway, forgot aza in the morning",
+            "all good formed stool took meds",
+            "mouth ulcer + 4 liquid + knee ache took everything",
+            "same as usual i guess?? 1 solid",
+            "nothing to report really so i left day 5 off",
+            "terrible 5 watery couldn't work",
+        ],
+    },
 ]
 
 

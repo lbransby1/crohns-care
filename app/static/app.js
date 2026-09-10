@@ -51,8 +51,12 @@ async function selectPreset(id, btn) {
 async function loadPreset(id) {
   const preset = await fetch(`/api/presets/${id}`).then((r) => r.json());
   previewTitle.textContent = preset.title;
-  previewMeta.textContent = `${preset.patient} · ${preset.days} days`;
-  logEditor.value = preset.logs.map((note, i) => `Day ${i + 1}: ${note}`).join("\n");
+  previewMeta.textContent = preset.raw
+    ? `${preset.patient} · ${preset.days} notes`
+    : `${preset.patient} · ${preset.days} days`;
+  logEditor.value = preset.raw
+    ? preset.raw
+    : preset.logs.map((note, i) => `Day ${i + 1}: ${note}`).join("\n");
 }
 
 fileInput.addEventListener("change", async () => {
