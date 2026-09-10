@@ -207,6 +207,102 @@ Day 7: terrible 5 watery couldn't work
 ]
 
 
+def _ninety_day_slow_flare() -> list[str]:
+    meals = [
+        "chicken and rice",
+        "oats and yoghurt",
+        "tomato soup",
+        "plain pasta",
+        "spicy Thai curry",
+        "toast",
+        "salmon and potatoes",
+    ]
+    logs = []
+    for day in range(1, 91):
+        meal = meals[day % len(meals)]
+        missed = day in {22, 47, 71}
+        if day <= 30:
+            meds = "Skipped evening azathioprine." if missed else "Took azathioprine as prescribed."
+            logs.append(
+                f"Quiet gut. Energy decent. One formed Bristol 4 stool. Ate {meal}. {meds} Walked in the evening."
+            )
+        elif day <= 55:
+            liquid = 1 + (day - 31) // 8
+            meds = "Forgot the morning dose, took it late." if missed else "Meds taken on time."
+            logs.append(
+                f"Slightly below par. Mild lower cramps after lunch. {liquid} loose stool(s), not fully watery. "
+                f"Ate {meal}. {meds} Sleep a bit broken."
+            )
+        elif day <= 75:
+            liquid = 2 + (day - 56) // 7
+            extra = "Left knee aching." if day >= 62 else "No extra-intestinal symptoms."
+            meds = "Missed the evening pill." if missed else "Azathioprine taken."
+            logs.append(
+                f"Poor energy. Moderate right-sided pain. {liquid} watery stools with urgency. {extra} "
+                f"Ate {meal}. {meds}"
+            )
+        else:
+            extra = "Mouth ulcer and swollen knee."
+            logs.append(
+                f"Terrible day. Severe cramping before each bowel movement. {4 + (day % 2)} liquid stools. "
+                f"{extra} Barely ate {meal}. Took azathioprine plus simple pain relief. Could not work a full day."
+            )
+    return logs
+
+
+def _ninety_day_relapsing() -> list[str]:
+    logs = []
+    flare_windows = {(40, 52), (70, 82)}
+
+    def in_flare(day: int) -> bool:
+        return any(start <= day <= end for start, end in flare_windows)
+
+    for day in range(1, 91):
+        missed = day in {41, 73}
+        if in_flare(day):
+            peak = 5 if day in range(46, 50) or day in range(76, 80) else 3
+            logs.append(
+                f"Flare day. Moderate to severe cramps. {peak} watery stools. Fatigue heavy. "
+                f"{'Skipped azathioprine in the rush.' if missed else 'Took steroids as instructed plus azathioprine.'} "
+                f"Plain rice only."
+            )
+        elif any(start - 5 <= day < start for start, _end in flare_windows):
+            logs.append(
+                "Turning. Mild pain, two mushy stools, energy dipping. Took all medication. Avoided spice."
+            )
+        elif any(end < day <= end + 6 for _start, end in flare_windows):
+            logs.append(
+                "Settling. One loose stool and one formed. Residual tiredness. Azathioprine taken. Knee quieter."
+            )
+        else:
+            logs.append(
+                "Remission-range. One formed stool, no pain, gym or a walk. Azathioprine confirmed. Sleeping through."
+            )
+    return logs
+
+
+PRESETS += [
+    {
+        "id": "slow-flare-90",
+        "title": "90-day slow flare",
+        "patient": "Synthetic case I",
+        "days": 90,
+        "teaser": "A quiet month, then smouldering activity, then a severe last fortnight.",
+        "pattern": "90 days",
+        "logs": _ninety_day_slow_flare(),
+    },
+    {
+        "id": "relapsing-90",
+        "title": "90-day relapsing course",
+        "patient": "Synthetic case J",
+        "days": 90,
+        "teaser": "Mostly well, with two discrete flares around days 40–52 and 70–82.",
+        "pattern": "90 days",
+        "logs": _ninety_day_relapsing(),
+    },
+]
+
+
 def get_preset(preset_id: str) -> Optional[dict]:
     for preset in PRESETS:
         if preset["id"] == preset_id:

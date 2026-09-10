@@ -40,7 +40,7 @@ def get_instructor_client():
 
 def extract_all_symptoms_batch(logs: List[str], max_attempts: int = 5) -> List[DailySymptomRecord]:
     """Extract HBI fields in chunks so long diaries stay inside context."""
-    chunk_size = 14
+    chunk_size = 30
     all_records: List[DailySymptomRecord] = []
     for start in range(0, len(logs), chunk_size):
         chunk = logs[start : start + chunk_size]

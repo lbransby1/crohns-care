@@ -8,7 +8,7 @@ CEREBRAS_API_KEY = os.getenv("CEREBRAS_API_KEY", "").strip()
 CEREBRAS_BASE_URL = os.getenv("CEREBRAS_BASE_URL", "https://api.cerebras.ai/v1").rstrip("/")
 CEREBRAS_MODEL = os.getenv("CEREBRAS_MODEL", "qwen-3.8-27b")
 
-MAX_LOG_DAYS = 60
+MAX_LOG_DAYS = 90
 MAX_LOG_CHARS = 2000
 MAX_UPLOAD_BYTES = 1_000_000
 
