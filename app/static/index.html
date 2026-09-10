@@ -14,7 +14,10 @@
     <header class="letterhead">
       <div>
         <p class="kicker">Department of gastroenterology · decision support</p>
-        <h1>HBI Brief</h1>
+        <div class="title-row">
+          <h1>HBI Brief</h1>
+          <button id="info-btn" type="button" class="info-btn" aria-haspopup="dialog" aria-controls="info-modal" aria-expanded="true" title="About this project">i</button>
+        </div>
         <p class="deck">Select a synthetic diary or upload your own daily notes. A RAG agent extracts Harvey-Bradshaw scores, charts the trajectory, and writes a one-page outpatient brief.</p>
       </div>
       <p class="badge">Non-diagnostic</p>
@@ -113,6 +116,37 @@
     <footer>
       Harvey-Bradshaw Index is a clinic score, not a diagnosis. This tool summarises patient-reported logs and must not be used as medical advice.
     </footer>
+  </div>
+
+  <div id="info-modal" class="info-modal" role="dialog" aria-modal="true" aria-labelledby="info-title">
+    <div class="info-panel">
+      <div class="info-panel-head">
+        <h2 id="info-title">About HBI Brief</h2>
+        <button id="info-close" type="button" class="info-close" aria-label="Close">Close</button>
+      </div>
+
+      <h3>The problem</h3>
+      <p>Crohn’s symptoms are often recorded as messy daily notes: slang, skipped days, one-word entries, and out-of-order fragments. That makes it hard for patients to communicate how they have actually been, and hard for a clinician to scan a diary into a clear trajectory.</p>
+
+      <h3>How it works</h3>
+      <p>Choose a synthetic diary or paste your own. A language model extracts Harvey-Bradshaw Index fields from each day (wellbeing, pain, liquid stools, extra-intestinal signs, medication adherence). Python then scores HBI, baseline vs current windows, and adherence — the model does not do the arithmetic. A short outpatient brief and PDF are generated from those metrics plus retrieved log excerpts.</p>
+
+      <h3>RAG</h3>
+      <p>Each run builds an ephemeral Chroma index of that diary only. The synthesizer does not read every day in full. It retrieves a few temporally labelled chunks for dietary triggers, complications, medication mentions, and stool pattern, then writes the narrative from those spans plus the deterministic stats.</p>
+
+      <h3>Guardrails</h3>
+      <ul>
+        <li>Structured extraction via a Pydantic schema, not free-form diagnosis.</li>
+        <li>Only Bristol 6–7 stools count toward liquid stool score.</li>
+        <li>Dietary links are only flagged inside a 24–48 hour window, and only if they appear in retrieved notes.</li>
+        <li>The brief is non-prescriptive: no drug, diet, or referral advice.</li>
+        <li>Diaries stay in memory for the request; collections are not shared across patients.</li>
+      </ul>
+
+      <p><a href="https://github.com/lbransby1/crohns" target="_blank" rel="noopener noreferrer">Source code on GitHub</a></p>
+
+      <p class="info-disclaimer"><strong>Disclaimer.</strong> This is not a medical diagnostics tool. It is non-diagnostic decision support for demonstration. It does not diagnose Crohn’s disease, assess flare risk, or replace a qualified clinician. Do not use it for treatment decisions.</p>
+    </div>
   </div>
   <script src="/static/app.js"></script>
 </body>

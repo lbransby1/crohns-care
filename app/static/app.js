@@ -9,11 +9,15 @@ const statusEl = document.getElementById("status");
 const errorEl = document.getElementById("error");
 const resultsEl = document.getElementById("results");
 const configBanner = document.getElementById("config-banner");
+const infoBtn = document.getElementById("info-btn");
+const infoModal = document.getElementById("info-modal");
+const infoClose = document.getElementById("info-close");
 
 let selectedPreset = "flare-14";
 let usingUpload = false;
 
 init();
+openInfo();
 
 async function init() {
   const health = await fetch("/health").then((r) => r.json()).catch(() => null);
@@ -211,3 +215,28 @@ function show(el, text) {
 function hide(el) {
   el.classList.add("hidden");
 }
+
+function openInfo() {
+  infoModal.classList.add("open");
+  document.body.classList.add("modal-open");
+  infoBtn.setAttribute("aria-expanded", "true");
+  infoClose.focus();
+}
+
+function closeInfo() {
+  infoModal.classList.remove("open");
+  document.body.classList.remove("modal-open");
+  infoBtn.setAttribute("aria-expanded", "false");
+  infoBtn.focus();
+}
+
+infoBtn.addEventListener("click", openInfo);
+infoClose.addEventListener("click", closeInfo);
+infoModal.addEventListener("click", (event) => {
+  if (event.target === infoModal) closeInfo();
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && infoModal.classList.contains("open")) {
+    closeInfo();
+  }
+});
