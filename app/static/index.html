@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HBI Brief · Crohn's outpatient consultation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="letterhead">
+      <div>
+        <p class="kicker">Department of gastroenterology · decision support</p>
+        <h1>HBI Brief</h1>
+        <p class="deck">Select a synthetic diary or upload your own daily notes. A RAG agent extracts Harvey-Bradshaw scores, charts the trajectory, and writes a one-page outpatient brief.</p>
+      </div>
+      <p class="badge">Non-diagnostic</p>
+    </header>
+
+    <p id="config-banner" class="banner hidden" role="status"></p>
+
+    <section class="workbench">
+      <aside class="source-pane">
+        <h2>Source</h2>
+        <div id="preset-list" class="preset-list" role="listbox" aria-label="Pre-written patient logs"></div>
+
+        <div class="upload-block">
+          <label class="upload-label">
+            <input id="file-input" type="file" accept=".txt,.csv,.json,.md" />
+            <span>Upload a diary</span>
+            <small>One note per line, or CSV/JSON. Max 60 days.</small>
+          </label>
+          <p id="file-name" class="file-name"></p>
+        </div>
+
+        <button id="analyze-btn" type="button">Generate brief</button>
+      </aside>
+
+      <div class="preview-pane">
+        <div class="preview-head">
+          <h2 id="preview-title">Diary preview</h2>
+          <p id="preview-meta" class="meta"></p>
+        </div>
+        <textarea id="log-editor" spellcheck="false" placeholder="Paste daily notes here, one day per line. You can also choose a pre-written case on the left."></textarea>
+      </div>
+    </section>
+
+    <div id="status" class="status hidden" role="status"></div>
+    <p id="error" class="error hidden" role="alert"></p>
+
+    <section id="results" class="results hidden">
+      <div class="results-head">
+        <div>
+          <p class="kicker" id="result-source"></p>
+          <h2>Extracted brief</h2>
+        </div>
+        <div class="results-actions">
+          <span id="tier-pill" class="tier"></span>
+          <a id="pdf-btn" class="pdf-btn" href="#">Download PDF</a>
+        </div>
+      </div>
+
+      <div class="hero-metric">
+        <div>
+          <p class="metric-label">HBI trajectory</p>
+          <p class="metric-value"><span id="hbi-from"></span><span class="arrow">→</span><span id="hbi-to"></span></p>
+          <p class="metric-note" id="hbi-windows"></p>
+        </div>
+        <p id="hbi-delta" class="delta"></p>
+      </div>
+
+      <dl class="stat-strip">
+        <div><dt>Window</dt><dd id="stat-window"></dd></div>
+        <div><dt>Adherence</dt><dd id="stat-adherence"></dd></div>
+        <div><dt>Liquid stools</dt><dd id="stat-liquid"></dd></div>
+        <div><dt>Complications</dt><dd id="stat-comps"></dd></div>
+        <div><dt>Missed doses</dt><dd id="stat-missed"></dd></div>
+      </dl>
+
+      <article class="summary-block">
+        <h3>How symptoms developed</h3>
+        <div id="summary-body" class="summary-body"></div>
+      </article>
+
+      <figure class="chart-block">
+        <figcaption>Harvey-Bradshaw Index over the monitoring window</figcaption>
+        <img id="chart-img" alt="HBI trajectory chart with remission, mild, and moderate/severe bands" />
+      </figure>
+
+      <div class="table-wrap">
+        <h3>Daily extraction</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Day</th>
+              <th>Date</th>
+              <th>HBI</th>
+              <th>Wellbeing</th>
+              <th>Pain</th>
+              <th>Liquid stools</th>
+              <th>Complications</th>
+              <th>Meds</th>
+            </tr>
+          </thead>
+          <tbody id="history-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer>
+      Harvey-Bradshaw Index is a clinic score, not a diagnosis. This tool summarises patient-reported logs and must not be used as medical advice.
+    </footer>
+  </div>
+  <script src="/static/app.js"></script>
+</body>
+</html>

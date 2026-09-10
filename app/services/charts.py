@@ -1,0 +1,57 @@
+import io
+
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+import pandas as pd
+
+from app.schemas import DayHistory
+
+
+def build_hbi_chart(history: list[DayHistory]) -> bytes:
+    df = pd.DataFrame([d.model_dump() for d in history])
+    df["hbi_rolling"] = df["hbi"].rolling(window=3, min_periods=1, center=True).mean()
+
+    plt.figure(figsize=(9.5, 3.2), dpi=200)
+    ax = plt.subplot(111)
+
+    ax.axhspan(0, 4.9, color="#e8f5e9", alpha=0.75, label="Remission (<5)")
+    ax.axhspan(5, 7.9, color="#fff9c4", alpha=0.75, label="Mild (5-7)")
+    ax.axhspan(8, max(df["hbi"].max() + 2, 14), color="#ffebee", alpha=0.75, label="Moderate/Severe (8+)")
+
+    ax.plot(
+        df["day"],
+        df["hbi"],
+        marker="o",
+        markersize=3.5,
+        color="#90caf9",
+        linestyle=":",
+        alpha=0.6,
+        label="Daily HBI",
+    )
+    ax.plot(
+        df["day"],
+        df["hbi_rolling"],
+        color="#1565c0",
+        linewidth=2.2,
+        label="3-Day Rolling Trend",
+    )
+
+    ax.set_title("Longitudinal Harvey-Bradshaw Index (HBI) Trajectory", fontsize=9, fontweight="bold", pad=8)
+    ax.set_xlabel("Monitoring Day", fontsize=8)
+    ax.set_ylabel("HBI Score", fontsize=8)
+    ax.grid(axis="y", linestyle="--", alpha=0.4)
+    ax.set_xticks(df["day"])
+    ax.tick_params(labelsize=7)
+    ax.legend(loc="upper left", framealpha=0.9, fontsize=7)
+
+    for spine in ("top", "right"):
+        ax.spines[spine].set_visible(False)
+
+    plt.tight_layout()
+    buf = io.BytesIO()
+    plt.savefig(buf, format="png", bbox_inches="tight")
+    plt.close()
+    buf.seek(0)
+    return buf.read()
