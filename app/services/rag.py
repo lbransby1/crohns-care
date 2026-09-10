@@ -1,4 +1,5 @@
 import hashlib
+import uuid
 from typing import Any, Dict, List
 
 import chromadb
@@ -45,38 +46,46 @@ class TokenHashEmbeddingFunction(EmbeddingFunction[Documents]):
 
 
 def retrieve_context(history: list[DayHistory]) -> dict[str, str]:
-    """Ephemeral per-request Chroma index so patients never share embeddings."""
+    """Per-request Chroma collection. EphemeralClient is a process singleton, so the
+    name must be unique or the second analyze raises Collection already exists."""
     if hasattr(chromadb, "EphemeralClient"):
         client = chromadb.EphemeralClient()
     else:
         client = chromadb.Client()
 
+    name = f"crohns_logs_{uuid.uuid4().hex}"
     collection = client.create_collection(
-        name="crohns_logs",
+        name=name,
         embedding_function=TokenHashEmbeddingFunction(),
     )
-    collection.add(
-        documents=[day.raw for day in history],
-        metadatas=[
-            {
-                "day": int(day.day),
-                "date": day.date,
-                "hbi": int(day.hbi),
-                "meds": str(day.meds),
-            }
-            for day in history
-        ],
-        ids=[f"day_{day.day}" for day in history],
-    )
+    try:
+        collection.add(
+            documents=[day.raw for day in history],
+            metadatas=[
+                {
+                    "day": int(day.day),
+                    "date": day.date,
+                    "hbi": int(day.hbi),
+                    "meds": str(day.meds),
+                }
+                for day in history
+            ],
+            ids=[f"day_{day.day}" for day in history],
+        )
 
-    queries = {
-        "dietary_triggers": "dietary foods eaten spicy curry chicken meals pasta takeaway",
-        "complications": "joint pain knee aching mouth ulcers swelling arthralgia fatigue",
-        "medication": "medication azathioprine missed skipped dose steroids adherence",
-        "stool_pattern": "watery loose liquid stool diarrhea urgency bristol",
-    }
-    n_results = min(3, len(history))
-    return {name: _format_hits(collection, query, n_results) for name, query in queries.items()}
+        queries = {
+            "dietary_triggers": "dietary foods eaten spicy curry chicken meals pasta takeaway",
+            "complications": "joint pain knee aching mouth ulcers swelling arthralgia fatigue",
+            "medication": "medication azathioprine missed skipped dose steroids adherence",
+            "stool_pattern": "watery loose liquid stool diarrhea urgency bristol",
+        }
+        n_results = min(3, len(history))
+        return {key: _format_hits(collection, query, n_results) for key, query in queries.items()}
+    finally:
+        try:
+            client.delete_collection(name)
+        except Exception:
+            pass
 
 
 def _format_hits(collection, query: str, n_results: int) -> str:
