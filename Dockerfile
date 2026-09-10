@@ -22,9 +22,6 @@ RUN useradd --create-home --uid 1000 appuser \
 
 USER appuser
 
-# Warm the MiniLM ONNX weights so the first Railway request is not stalled.
-RUN python -c "from chromadb.utils.embedding_functions import DefaultEmbeddingFunction; DefaultEmbeddingFunction()"
-
 COPY --chown=appuser:appuser app ./app
 
 EXPOSE 8000

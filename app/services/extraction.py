@@ -57,7 +57,7 @@ def _extract_chunk(logs: List[str], day_offset: int, max_attempts: int) -> List[
     last_error: Exception | None = None
     for attempt in range(1, max_attempts + 1):
         try:
-            res = client.chat.completions.create(
+            kwargs = dict(
                 model=CEREBRAS_MODEL,
                 response_model=BatchSymptoms,
                 messages=[
@@ -72,8 +72,11 @@ def _extract_chunk(logs: List[str], day_offset: int, max_attempts: int) -> List[
                     {"role": "user", "content": formatted_input},
                 ],
                 temperature=0.0,
-                extra_body=EXTRA_BODY,
             )
+            try:
+                res = client.chat.completions.create(**kwargs, extra_body=EXTRA_BODY)
+            except TypeError:
+                res = client.chat.completions.create(**kwargs)
             records = sorted(res.records, key=lambda r: r.day)
             records = _remap_chunk_days(records, day_offset)
             if len(records) != len(logs):

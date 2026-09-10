@@ -93,9 +93,9 @@ async function generateBrief() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    const data = await response.json();
+    const data = await parseResponse(response);
     if (!response.ok) {
-      throw new Error(formatDetail(data.detail) || "Analysis failed.");
+      throw new Error(formatDetail(data.detail) || `Analysis failed (${response.status}).`);
     }
     renderResults(data);
   } catch (err) {
@@ -172,6 +172,18 @@ function tierClass(score) {
   if (score < 5) return "remission";
   if (score < 8) return "mild";
   return "flare";
+}
+
+async function parseResponse(response) {
+  const raw = await response.text();
+  if (!raw) {
+    throw new Error(`Empty response (${response.status}). The server may have run out of memory or timed out.`);
+  }
+  try {
+    return JSON.parse(raw);
+  } catch {
+    throw new Error(raw.replace(/\s+/g, " ").slice(0, 400));
+  }
 }
 
 function formatDetail(detail) {

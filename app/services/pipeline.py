@@ -38,13 +38,16 @@ def run_analysis(logs: list[str], source_label: str) -> AnalyzeResponse:
 
 
 def _run_analysis_locked(logs: list[str], source_label: str) -> AnalyzeResponse:
-    records = extract_all_symptoms_batch(logs)
-    history = build_history(logs, records)
-    stats = compute_stats(history)
-    rag_context = retrieve_context(history)
-    summary = synthesize_brief(stats, rag_context)
-    chart_png = build_hbi_chart(history)
-    pdf_bytes = compile_clinical_pdf(stats, summary, chart_png)
+    try:
+        records = extract_all_symptoms_batch(logs)
+        history = build_history(logs, records)
+        stats = compute_stats(history)
+        rag_context = retrieve_context(history)
+        summary = synthesize_brief(stats, rag_context)
+        chart_png = build_hbi_chart(history)
+        pdf_bytes = compile_clinical_pdf(stats, summary, chart_png)
+    except Exception as exc:
+        raise RuntimeError(f"{exc.__class__.__name__}: {exc}") from exc
 
     report_id = uuid.uuid4().hex
     payload = AnalyzeResponse(

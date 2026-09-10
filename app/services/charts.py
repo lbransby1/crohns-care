@@ -51,7 +51,9 @@ def build_hbi_chart(history: list[DayHistory]) -> bytes:
 
     plt.tight_layout()
     buf = io.BytesIO()
-    plt.savefig(buf, format="png", bbox_inches="tight")
-    plt.close()
+    try:
+        plt.savefig(buf, format="png", bbox_inches="tight")
+    finally:
+        plt.close("all")
     buf.seek(0)
     return buf.read()

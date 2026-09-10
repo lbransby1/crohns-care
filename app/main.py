@@ -1,14 +1,23 @@
 import asyncio
+import logging
 from pathlib import Path
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
-from fastapi.responses import HTMLResponse, Response
+from fastapi import FastAPI, File, HTTPException, Request, UploadFile
+from fastapi.exception_handlers import (
+    http_exception_handler,
+    request_validation_exception_handler,
+)
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.config import CEREBRAS_API_KEY, CEREBRAS_MODEL, MAX_UPLOAD_BYTES
 from app.data.sample_logs import get_preset, preset_summaries
 from app.schemas import AnalyzeRequest
 from app.services.pipeline import get_pdf, resolve_logs, run_analysis
+
+logger = logging.getLogger("hbi_brief")
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
@@ -18,6 +27,17 @@ app = FastAPI(
     version="1.0.0",
 )
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    if isinstance(exc, (HTTPException, StarletteHTTPException)):
+        return await http_exception_handler(request, exc)
+    if isinstance(exc, RequestValidationError):
+        return await request_validation_exception_handler(request, exc)
+    logger.exception("Unhandled error on %s %s", request.method, request.url.path)
+    message = str(exc).strip() or exc.__class__.__name__
+    return JSONResponse(status_code=500, content={"detail": message})
 
 
 @app.get("/health")
@@ -57,10 +77,13 @@ async def analyze(body: AnalyzeRequest):
     try:
         logs, label = resolve_logs(body.preset_id, body.logs, body.text)
         return await asyncio.to_thread(run_analysis, logs, label)
+    except HTTPException:
+        raise
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    except RuntimeError as exc:
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.exception("Analyze failed")
+        raise HTTPException(status_code=502, detail=str(exc) or exc.__class__.__name__) from exc
 
 
 @app.post("/api/analyze/upload")
@@ -80,10 +103,13 @@ async def analyze_upload(file: UploadFile = File(...)):
     try:
         logs, label = resolve_logs(None, None, text)
         return await asyncio.to_thread(run_analysis, logs, f"Uploaded · {file.filename or 'diary'}")
+    except HTTPException:
+        raise
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    except RuntimeError as exc:
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.exception("Upload analyze failed")
+        raise HTTPException(status_code=502, detail=str(exc) or exc.__class__.__name__) from exc
 
 
 @app.get("/api/reports/{report_id}/pdf")

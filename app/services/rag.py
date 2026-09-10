@@ -1,35 +1,69 @@
+import hashlib
+from typing import Any, Dict, List
+
 import chromadb
-from chromadb.utils import embedding_functions
+import numpy as np
+from chromadb.api.types import Documents, EmbeddingFunction, Embeddings
 
 from app.schemas import DayHistory
 
-_emb_fn = None
 
+class TokenHashEmbeddingFunction(EmbeddingFunction[Documents]):
+    """Stable lexical embeddings so Railway does not need the 80MB ONNX MiniLM download."""
 
-def _embedding_fn():
-    global _emb_fn
-    if _emb_fn is None:
-        _emb_fn = embedding_functions.DefaultEmbeddingFunction()
-    return _emb_fn
+    def __init__(self, dim: int = 256) -> None:
+        self.dim = dim
 
+    def __call__(self, input: Documents) -> Embeddings:
+        return [self._embed(text) for text in input]
 
-def _chroma_client():
-    if hasattr(chromadb, "EphemeralClient"):
-        return chromadb.EphemeralClient()
-    return chromadb.Client()
+    def _embed(self, text: str) -> List[float]:
+        vec = np.zeros(self.dim, dtype=np.float32)
+        for tok in str(text).lower().split():
+            digest = hashlib.md5(tok.encode("utf-8")).digest()
+            idx = int.from_bytes(digest[:4], "little") % self.dim
+            vec[idx] += 1.0
+        norm = float(np.linalg.norm(vec))
+        if norm:
+            vec /= norm
+        return vec.tolist()
+
+    @staticmethod
+    def name() -> str:
+        return "token_hash"
+
+    def get_config(self) -> Dict[str, Any]:
+        return {"dim": self.dim}
+
+    @staticmethod
+    def build_from_config(config: Dict[str, Any]) -> "TokenHashEmbeddingFunction":
+        return TokenHashEmbeddingFunction(dim=int(config.get("dim", 256)))
+
+    @staticmethod
+    def validate_config(config: Dict[str, Any]) -> None:
+        return None
 
 
 def retrieve_context(history: list[DayHistory]) -> dict[str, str]:
     """Ephemeral per-request Chroma index so patients never share embeddings."""
-    client = _chroma_client()
+    if hasattr(chromadb, "EphemeralClient"):
+        client = chromadb.EphemeralClient()
+    else:
+        client = chromadb.Client()
+
     collection = client.create_collection(
         name="crohns_logs",
-        embedding_function=_embedding_fn(),
+        embedding_function=TokenHashEmbeddingFunction(),
     )
     collection.add(
         documents=[day.raw for day in history],
         metadatas=[
-            {"day": day.day, "date": day.date, "hbi": day.hbi, "meds": str(day.meds)}
+            {
+                "day": int(day.day),
+                "date": day.date,
+                "hbi": int(day.hbi),
+                "meds": str(day.meds),
+            }
             for day in history
         ],
         ids=[f"day_{day.day}" for day in history],
@@ -51,9 +85,9 @@ def _format_hits(collection, query: str, n_results: int) -> str:
         n_results=n_results,
         include=["documents", "metadatas"],
     )
-    docs = res["documents"][0]
-    metas = res["metadatas"][0]
-    paired = sorted(zip(docs, metas), key=lambda x: x[1]["day"])
+    docs = (res.get("documents") or [[]])[0] or []
+    metas = (res.get("metadatas") or [[]])[0] or []
+    paired = sorted(zip(docs, metas), key=lambda x: int(x[1].get("day", 0)))
     return "\n".join(
         f'- [Day {m["day"]} | HBI: {m["hbi"]} | Meds: {m["meds"]}]: "{d}"' for d, m in paired
     )
