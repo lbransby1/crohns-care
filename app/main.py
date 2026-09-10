@@ -22,7 +22,7 @@ logger = logging.getLogger("hbi_brief")
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 app = FastAPI(
-    title="HBI Brief",
+    title="Crohns Care",
     description="Harvey-Bradshaw clinical briefs from Crohn's daily logs.",
     version="1.0.0",
 )

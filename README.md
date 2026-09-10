@@ -1,4 +1,4 @@
-# HBI Brief
+# Crohns Care
 
 Web app that turns Crohn's daily logs into a Harvey-Bradshaw outpatient brief. It uses the same stack as `notebooks/pdf-generation-demo.ipynb`: Cerebras (`qwen-3.8-27b`) + Instructor extraction, Chroma RAG, matplotlib trajectory, ReportLab PDF.
 
