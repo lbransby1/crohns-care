@@ -1,4 +1,4 @@
-# Crohns Care
+# Crohn's Care
 
 This is not a medical diagnostics tool. It is non-diagnostic decision support for demonstration. It does not diagnose Crohn’s disease, assess flare risk, or replace a qualified clinician. Do not use it for treatment decisions.
 
@@ -40,6 +40,7 @@ app/
     pdf.py                One-page ReportLab brief
     pipeline.py           Orchestration and in-memory PDF store
   static/                 HTML / CSS / JS frontend
+eval/                     Label-first synthetic benchmark
 notebooks/                Original Colab PDF-generation demo
 ```
 
@@ -76,3 +77,46 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 - `POST /api/analyze` with `{ "preset_id": "flare-14" }` or `{ "text": "Day 1: ..." }`
 - `POST /api/analyze/upload` multipart file
 - `GET /api/reports/{id}/pdf`
+
+## Evaluation
+
+Gold HBI labels are sampled first, then a note is rendered from them. Informal and terse notes sample independent paraphrases per field, so the extractor cannot win by memorising a few templates. Extraction is scored against those labels, not against the UI presets. The prompt stays at schema / HBI / Bristol level (no slang lexicon). This is a synthetic benchmark, not clinician-labelled real diaries.
+
+Offline (no API key):
+
+```bash
+python -m unittest eval.test_analytics eval.test_parser eval.test_gold eval.test_guardrails eval.test_rag
+```
+
+Extraction benchmark (needs `CEREBRAS_API_KEY`):
+
+```bash
+python -m eval.run_extraction --n 140
+```
+
+Writes `eval/results.json`. Latest run: `qwen-3.8-27b`, 140 days, 11 diary batches.
+
+### Extraction vs gold labels
+
+| Slice | n | Wellbeing | Pain | Liquid | HBI exact | HBI ±1 | Adherence | Comp. P | Comp. R |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Overall | 140 | 0.850 | 0.879 | 1.000 | 0.771 | 0.957 | 1.000 | 0.867 | 0.852 |
+| Clinic | 49 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 | 0.889 | 0.889 |
+| Informal | 35 | 0.543 | 0.714 | 1.000 | 0.400 | 0.857 | 1.000 | 0.700 | 0.636 |
+| Terse | 28 | 0.821 | 0.750 | 1.000 | 0.607 | 0.964 | 1.000 | 0.600 | 0.600 |
+| Bristol-ambiguous | 28 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 |
+
+Day alignment was 1.000 on every slice. Formed-stool liquid false positives were 0. Clinic and Bristol-ambiguous are the production-like notes; informal (slang diary) and terse (telegraphic fragments) are the generalization slices.
+
+### Diary-level and RAG
+
+| Metric | Value |
+| --- | ---: |
+| Clinical tier accuracy | 0.909 |
+| HBI trend-sign accuracy | 0.818 |
+| Current-window HBI MAE | 0.245 |
+| Diaries | 11 |
+| Planted-span RAG recall@3 | 1.000 |
+
+Tier is the activity bucket from current-window mean HBI (remission / mild / moderate-severe). Trend-sign is whether baseline→current HBI moved up, down, or stayed flat. RAG recall@3 is whether planted spans for diet, medication, complications, and stool pattern appear in the top-3 retrieved chunks.
+

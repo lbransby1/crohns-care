@@ -18,3 +18,4 @@ hbi_trajectory.png
 .ipynb_checkpoints/
 .vscode/
 *.log
+eval/results.json
